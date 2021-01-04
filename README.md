@@ -17,15 +17,23 @@ h5py == 3.1.0
 scikit-learn == 0.23.2  
 scipy == 1.5.4  
 torch == 1.7.0  
-torchvision == 0.8.1  
+torchvision == 0.8.1
+pycocotools == 2.0.2
+```
+**Dataset preparation**: In ```preparation/prepare_coco_segmentation.py``` a preprocessing script can be found in order prepare the COCO images serving as OoD proxy for OoD training. This script basically generates binary segmentation masks for COCO images not containing any instances that could also be assigned to one of the Cityscapes (train-)classes. Execute via:
 ```  
-**Note**: Make sure that the Cython script ```src/metaseg/metrics.pyx``` (on the machine where the script is deployed to) is compiled. If it has not been compiled:  
+python preparation/prepare_coco_segmentation.py
+```
+Regarding the Cityscapes dataset, the dataloader used in this repo assumes that the *labelTrainId* images are already generated according to the [official Cityscapes script](https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/preparation/createTrainIdLabelImgs.py).
+
+**Cython preparation**: Make sure that the Cython script ```src/metaseg/metrics.pyx``` (on the machine where the script is deployed to) is compiled. If it has not been compiled yet:  
 ```  
 cd src/metaseg/  
 python metrics_setup.py build_ext --inplace  
 cd ../../  
 ```  
 For pretrained weights, see [https://github.com/NVIDIA/semantic-segmentation/tree/sdcnet](https://github.com/NVIDIA/semantic-segmentation/tree/sdcnet) (for DeepLabv3+) and [https://github.com/lxtGH/GALD-DGCNet](https://github.com/lxtGH/GALD-DGCNet) (for DualGCNNet).
+The weights after OoD training can be downloaded [here for DeepLabv3+](http://www-ai.math.uni-wuppertal.de/~chan/weights/DeepLabV3+_WideResNet38_epoch_4_alpha_0.9.pth) and [here for DualGCNNet](http://www-ai.math.uni-wuppertal.de/~chan/weights/DualGCNNet_res50_epoch_11_alpha_0.25.pth).
   
 ## Quick start  
   
