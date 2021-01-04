@@ -17,6 +17,7 @@ def main():
     year = 2017
     id_in = COCO.train_id_in
     id_out = COCO.train_id_out
+    min_size = COCO.min_image_size
     annotation_file = '{}/annotations/instances_{}.json'.format(root, split+str(year))
     images_dir = '{}/{}'.format(root, split+str(year))
     tools = coco_tools(annotation_file)
@@ -34,6 +35,7 @@ def main():
     exclude_img_Ids = set(exclude_img_Ids)
     img_Ids = [int(image[:-4]) for image in os.listdir(images_dir) if int(image[:-4]) not in exclude_img_Ids]
 
+    num_masks = 0
     # Process each image
     print("Ground truth segmentation mask will be saved in:", save_dir)
     if not os.path.exists(save_dir):
@@ -41,23 +43,30 @@ def main():
         print("Created save directory:", save_dir)
     for i, img_Id in enumerate(img_Ids):
         img = tools.loadImgs(img_Id)[0]
-        ann_Ids = tools.getAnnIds(imgIds=img['id'], iscrowd=None)
-        annotations = tools.loadAnns(ann_Ids)
+        h, w = img['height'], img['width']
 
-        # Generate binary segmentation mask
-        mask = np.ones((img['height'], img['width']), dtype="uint8") * id_in
-        for j in range(len(annotations)):
-            mask = np.maximum(tools.annToMask(annotations[j])*id_out, mask)
+        # Select only images with height and width of at least min_size
+        if h >= min_size and w >= min_size:
+            ann_Ids = tools.getAnnIds(imgIds=img['id'], iscrowd=None)
+            annotations = tools.loadAnns(ann_Ids)
 
-        # Save segmentation mask
-        Image.fromarray(mask).save(os.path.join(save_dir, "{:012d}.jpg".format(img_Id)))
+            # Generate binary segmentation mask
+            mask = np.ones((h, w), dtype="uint8") * id_in
+            for j in range(len(annotations)):
+                mask = np.maximum(tools.annToMask(annotations[j])*id_out, mask)
+
+            # Save segmentation mask
+            Image.fromarray(mask).save(os.path.join(save_dir, "{:012d}.png".format(img_Id)))
+            num_masks += 1
         print("\rImages Processed: {}/{}".format(i + 1, len(img_Ids)), end=' ')
         sys.stdout.flush()
 
+    # Print summary
+    print("\nNumber of created segmentation masks with height and width of at least %d pixels:" % min_size, num_masks)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
-    print("\nFINISHED {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
+    print("FINISHED {:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
 
 if __name__ == '__main__':
     main()

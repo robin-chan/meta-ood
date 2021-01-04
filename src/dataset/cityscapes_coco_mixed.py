@@ -22,10 +22,8 @@ class CityscapesCocoMix(Dataset):
 
         self.cs = Cityscapes(root=cs_root, split=self.cs_split)
         self.coco = COCO(root=coco_root, split=self.coco_split, proxy_size=int(subsampling_factor*len(self.cs)))
-
         self.images = self.cs.images + self.coco.images
         self.targets = self.cs.targets + self.coco.targets
-        self.min_image_size = self.coco.min_image_size
         self.train_id_out = self.coco.train_id_out
         self.num_classes = self.cs.num_train_ids
         self.mean = self.cs.mean
@@ -36,16 +34,6 @@ class CityscapesCocoMix(Dataset):
         """Return raw image, ground truth in PIL format and absolute path of raw image as string"""
         image = Image.open(self.images[i]).convert('RGB')
         target = Image.open(self.targets[i]).convert('L')
-        """resize image if it is too small"""
-        w, h = image.size
-        min_size = self.min_image_size
-        if min(w, h) < min_size:
-            new_size = (int(w / min(w, h) * min_size), int(h / min(w, h) * min_size))
-            image = image.resize(new_size, Image.ANTIALIAS)
-            target = np.array(target.resize(new_size, Image.ANTIALIAS))
-            target[target > 0] = self.train_id_out
-            target = Image.fromarray(target)
-
         if self.transform is not None:
             image, target = self.transform(image, target)
         return image, target

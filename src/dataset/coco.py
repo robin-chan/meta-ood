@@ -25,11 +25,12 @@ class COCO(Dataset):
         self.transform = transform
 
         for root, _, filenames in os.walk(os.path.join(self.root, "annotations", "ood_seg_" + self.split)):
-            assert self.split in ['train' + self.coco_year, 'test' + self.coco_year]
+            assert self.split in ['train' + self.coco_year, 'val' + self.coco_year]
             for filename in filenames:
                 if os.path.splitext(filename)[-1] == '.png':
                     self.targets.append(os.path.join(root, filename))
                     self.images.append(os.path.join(self.root, self.split, filename.split(".")[0] + ".jpg"))
+
         """
         shuffle data and subsample
         """
